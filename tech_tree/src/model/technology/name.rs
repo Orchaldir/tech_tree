@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Hash)]
 pub enum TechnologyName {
     Simple(String),
     Ranked {
@@ -30,7 +30,10 @@ mod tests {
 
     #[test]
     fn test_get_full() {
-        assert_eq!(TechnologyName::Simple("Test".to_string()).get_full(), "Test");
+        assert_eq!(
+            TechnologyName::Simple("Test".to_string()).get_full(),
+            "Test"
+        );
         assert_eq!(TechnologyName::new_ranked("Tech", 4).get_full(), "Tech 4");
     }
 }
