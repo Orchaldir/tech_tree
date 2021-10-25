@@ -12,27 +12,25 @@ pub enum TechnologyName {
 
 impl TechnologyName {
     pub fn new_simple<S: Into<String>>(base: S) -> Result<Self, AddError> {
-        let base = base.into();
-        let trimmed = base.trim();
-
-        if trimmed.is_empty() {
-            return Err(AddError::InvalidName(base));
-        }
-
-        Ok(Self::Simple(trimmed.to_string()))
+        Ok(Self::Simple(Self::trim(&base.into())?))
     }
 
     pub fn new_ranked<S: Into<String>>(base: S, rank: u8) -> Result<Self, AddError> {
         let base = base.into();
-        let trimmed = base.trim();
-
-        if trimmed.is_empty() {
-            return Err(AddError::InvalidName(base));
-        }
-
+        let trimmed = Self::trim(&base)?;
         let full = format!("{} {}", trimmed, rank);
 
         Ok(Self::Ranked { base, rank, full })
+    }
+
+    fn trim(base: &str) -> Result<String, AddError> {
+        let trimmed = base.trim();
+
+        if trimmed.is_empty() {
+            return Err(AddError::InvalidName(base.to_string()));
+        }
+
+        Ok(trimmed.to_string())
     }
 
     pub fn get_full(&self) -> &str {
