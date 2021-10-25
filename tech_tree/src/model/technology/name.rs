@@ -11,6 +11,29 @@ pub enum TechnologyName {
 }
 
 impl TechnologyName {
+    pub fn new<S: Into<String>>(base: S) -> Result<Self, AddError> {
+        let base = base.into();
+        let parts: Vec<&str> = base.split_whitespace().collect();
+
+        if parts.len() > 1 {
+            if let Some((last, elements)) = parts.split_last() {
+                let base = elements.join(" ");
+
+                if let Ok(rank) = last.parse::<u8>() {
+                    let full = format!("{} {}", base, rank);
+
+                    return Ok(Self::Ranked { base, rank, full });
+                }
+
+                return Ok(Self::Simple(base));
+            }
+        } else if parts.is_empty() {
+            return Err(AddError::InvalidName(base));
+        }
+
+        Ok(Self::Simple(parts.first().unwrap().to_string()))
+    }
+
     pub fn new_simple<S: Into<String>>(base: S) -> Result<Self, AddError> {
         Ok(Self::Simple(Self::trim(&base.into())?))
     }
@@ -47,6 +70,26 @@ impl TechnologyName {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_new_with_simple() {
+        assert_eq!(
+            TechnologyName::new("  Test  "),
+            Ok(TechnologyName::Simple("Test".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_new_with_ranked() {
+        assert_eq!(
+            TechnologyName::new("  Very  Advanced   Tech 4  "),
+            Ok(TechnologyName::Ranked {
+                base: "Very Advanced Tech".to_string(),
+                rank: 4,
+                full: "Very Advanced Tech 4".to_string()
+            })
+        );
+    }
 
     #[test]
     fn test_new_simple() {
