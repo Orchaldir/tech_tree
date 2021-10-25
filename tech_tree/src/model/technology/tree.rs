@@ -129,4 +129,84 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn test_wrong_order() {
+        let input = vec![
+            Input {
+                name: "t0".to_string(),
+                predecessors: vec!["t1".to_string()],
+            },
+            Input {
+                name: "t1".to_string(),
+                predecessors: vec![],
+            },
+        ];
+
+        assert_eq!(
+            TechnologyTree::create(input),
+            Ok(TechnologyTree {
+                technologies: vec![
+                    Technology {
+                        id: TechnologyId(0),
+                        name: TechnologyName::Simple("t0".to_string()),
+                        predecessors: vec![TechnologyId(1)],
+                    },
+                    Technology {
+                        id: TechnologyId(1),
+                        name: TechnologyName::Simple("t1".to_string()),
+                        predecessors: vec![],
+                    },
+                ]
+            })
+        );
+    }
+
+    #[test]
+    fn test_invalid_name() {
+        let name = "   ";
+        let input = vec![Input {
+            name: name.to_string(),
+            predecessors: vec![],
+        }];
+
+        assert_eq!(
+            TechnologyTree::create(input),
+            Err(AddError::InvalidName(name.to_string()))
+        );
+    }
+
+    #[test]
+    fn test_duplicate_name() {
+        let name = "duplicate";
+        let input = vec![
+            Input {
+                name: name.to_string(),
+                predecessors: vec![],
+            },
+            Input {
+                name: name.to_string(),
+                predecessors: vec![],
+            },
+        ];
+
+        assert_eq!(
+            TechnologyTree::create(input),
+            Err(AddError::NameExists(name.to_string()))
+        );
+    }
+
+    #[test]
+    fn test_unknown_predecessor() {
+        let name = "unknown";
+        let input = vec![Input {
+            name: "name".to_string(),
+            predecessors: vec![name.to_string()],
+        }];
+
+        assert_eq!(
+            TechnologyTree::create(input),
+            Err(AddError::UnknownPredecessor(name.to_string()))
+        );
+    }
 }
