@@ -16,11 +16,14 @@ impl TechnologyName {
     }
 
     pub fn new_ranked<S: Into<String>>(base: S, rank: u8) -> Result<Self, AddError> {
-        let base = base.into();
-        let trimmed = Self::trim(&base)?;
+        let trimmed = Self::trim(&base.into())?;
         let full = format!("{} {}", trimmed, rank);
 
-        Ok(Self::Ranked { base, rank, full })
+        Ok(Self::Ranked {
+            base: trimmed,
+            rank,
+            full,
+        })
     }
 
     fn trim(base: &str) -> Result<String, AddError> {
@@ -46,23 +49,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_simple() {
+    fn test_new_simple() {
         assert_eq!(
-            TechnologyName::new_simple("Test").unwrap().get_full(),
-            "Test"
+            TechnologyName::new_simple("  Test  "),
+            Ok(TechnologyName::Simple("Test".to_string()))
         );
     }
 
     #[test]
-    fn test_simple_with_extra_whitespaces() {
-        assert_eq!(
-            TechnologyName::new_simple("  UVW   ").unwrap().get_full(),
-            "UVW"
-        );
-    }
-
-    #[test]
-    fn test_simple_with_empty_string() {
+    fn test_new_simple_with_empty_string() {
         let string = "   ";
         assert_eq!(
             TechnologyName::new_simple(string).unwrap_err(),
@@ -71,26 +66,38 @@ mod tests {
     }
 
     #[test]
-    fn test_ranked() {
+    fn test_new_ranked() {
         assert_eq!(
-            TechnologyName::new_ranked("Tech", 4).unwrap().get_full(),
-            "Tech 4"
+            TechnologyName::new_ranked("  Tech  ", 4),
+            Ok(TechnologyName::Ranked {
+                base: "Tech".to_string(),
+                rank: 4,
+                full: "Tech 4".to_string()
+            })
         );
     }
 
     #[test]
-    fn test_ranked_with_extra_whitespaces() {
-        assert_eq!(
-            TechnologyName::new_ranked("  ABC  ", 2).unwrap().get_full(),
-            "ABC 2"
-        );
-    }
-
-    #[test]
-    fn test_ranked_with_empty_string() {
+    fn test_new_ranked_with_empty_string() {
         assert_eq!(
             TechnologyName::new_ranked("", 4).unwrap_err(),
             AddError::InvalidName("".to_string())
+        );
+    }
+
+    #[test]
+    fn test_get_full_simple() {
+        assert_eq!(
+            TechnologyName::new_simple("  UVW   ").unwrap().get_full(),
+            "UVW"
+        );
+    }
+
+    #[test]
+    fn test_get_full_ranked() {
+        assert_eq!(
+            TechnologyName::new_ranked("  ABC  ", 2).unwrap().get_full(),
+            "ABC 2"
         );
     }
 }
