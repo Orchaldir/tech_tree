@@ -7,7 +7,14 @@ pub mod tree;
 pub struct TechnologyId(usize);
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Technology<T> {
+pub struct Technology {
+    id: TechnologyId,
     name: TechnologyName,
-    requirements: Vec<T>,
+    predecessors: Vec<TechnologyId>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Input {
+    name: String,
+    predecessors: Vec<String>,
 }
