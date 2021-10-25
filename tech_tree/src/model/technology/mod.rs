@@ -3,7 +3,7 @@ use crate::model::technology::name::TechnologyName;
 pub mod name;
 pub mod tree;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct TechnologyId(usize);
 
 impl TechnologyId {
@@ -25,6 +25,14 @@ impl Technology {
             id,
             name,
             predecessors,
+        }
+    }
+
+    pub fn simple(id: usize) -> Self {
+        Technology {
+            id: TechnologyId(id),
+            name: TechnologyName::Simple(format!("Tech {}", id)),
+            predecessors: Vec::new(),
         }
     }
 
