@@ -10,6 +10,10 @@ impl TechnologyId {
     pub fn new(id: usize) -> Self {
         TechnologyId(id)
     }
+
+    pub fn id(&self) -> usize {
+        self.0
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -17,14 +21,21 @@ pub struct Technology {
     id: TechnologyId,
     name: TechnologyName,
     predecessors: Vec<TechnologyId>,
+    successors: Vec<TechnologyId>,
 }
 
 impl Technology {
-    pub fn new(id: TechnologyId, name: TechnologyName, predecessors: Vec<TechnologyId>) -> Self {
+    pub fn new(
+        id: TechnologyId,
+        name: TechnologyName,
+        predecessors: Vec<TechnologyId>,
+        successors: Vec<TechnologyId>,
+    ) -> Self {
         Technology {
             id,
             name,
             predecessors,
+            successors,
         }
     }
 
@@ -33,6 +44,7 @@ impl Technology {
             id: TechnologyId(id),
             name: TechnologyName::Simple(format!("Tech {}", id)),
             predecessors: Vec::new(),
+            successors: Vec::new(),
         }
     }
 

@@ -2,18 +2,26 @@ use crate::model::error::AddError;
 use crate::model::technology::name::TechnologyName;
 use crate::model::technology::tree::TechnologyTree;
 use crate::model::technology::{Input, Technology, TechnologyId};
+use itertools::izip;
 use std::collections::HashMap;
 
-pub fn create_tree(technologies: Vec<Input>) -> Result<TechnologyTree, AddError> {
-    let name_to_id = create_name_to_id_map(&technologies)?;
+pub fn create_tree(input_list: Vec<Input>) -> Result<TechnologyTree, AddError> {
+    let name_to_id = create_name_to_id_map(&input_list)?;
+    let predecessors_list = process_predecessors(&input_list, &name_to_id)?;
+    let successors_list = process_successors(&predecessors_list);
+    let mut technologies = Vec::new();
 
-    let result: Result<Vec<Technology>, AddError> = technologies
-        .into_iter()
-        .enumerate()
-        .map(|(id, t)| convert_technology(t, id, &name_to_id))
-        .collect();
+    for (input, predecessors, successors) in izip!(input_list, predecessors_list, successors_list) {
+        let technology = Technology::new(
+            TechnologyId::new(technologies.len()),
+            TechnologyName::new(input.name())?,
+            predecessors,
+            successors,
+        );
+        technologies.push(technology);
+    }
 
-    Ok(TechnologyTree::new(result?))
+    Ok(TechnologyTree::new(technologies))
 }
 
 fn create_name_to_id_map(technologies: &[Input]) -> Result<HashMap<String, usize>, AddError> {
@@ -31,25 +39,38 @@ fn create_name_to_id_map(technologies: &[Input]) -> Result<HashMap<String, usize
     Ok(name_to_id)
 }
 
-fn convert_technology(
-    technology: Input,
-    id: usize,
+fn process_predecessors(
+    technologies: &[Input],
     name_to_id: &HashMap<String, usize>,
-) -> Result<Technology, AddError> {
-    let requirements: Result<Vec<TechnologyId>, AddError> = technology
-        .predecessors()
+) -> Result<Vec<Vec<TechnologyId>>, AddError> {
+    technologies
         .iter()
-        .map(|name| convert_name(name, name_to_id))
-        .collect();
-
-    Ok(Technology::new(
-        TechnologyId::new(id),
-        TechnologyName::new(technology.name())?,
-        requirements?,
-    ))
+        .map(|technology| {
+            technology
+                .predecessors()
+                .iter()
+                .map(|name| into_id(name, name_to_id))
+                .collect()
+        })
+        .collect()
 }
 
-fn convert_name(name: &str, name_to_id: &HashMap<String, usize>) -> Result<TechnologyId, AddError> {
+fn process_successors(predecessors_list: &[Vec<TechnologyId>]) -> Vec<Vec<TechnologyId>> {
+    let mut successors: Vec<Vec<TechnologyId>> = vec![Vec::new(); predecessors_list.len()];
+
+    for (id, predecessors) in predecessors_list.iter().enumerate() {
+        for predecessor in predecessors {
+            successors
+                .get_mut(predecessor.id())
+                .unwrap()
+                .push(TechnologyId::new(id));
+        }
+    }
+
+    successors
+}
+
+fn into_id(name: &str, name_to_id: &HashMap<String, usize>) -> Result<TechnologyId, AddError> {
     name_to_id
         .get(name)
         .map(|id| TechnologyId::new(*id))
@@ -76,27 +97,32 @@ mod tests {
                 Technology::new(
                     TechnologyId::new(0),
                     TechnologyName::Simple("t0".to_string()),
-                    vec![]
+                    vec![],
+                    vec![TechnologyId::new(2)],
                 ),
                 Technology::new(
                     TechnologyId::new(1),
                     TechnologyName::Simple("t1".to_string()),
-                    vec![]
+                    vec![],
+                    vec![TechnologyId::new(2)],
                 ),
                 Technology::new(
                     TechnologyId::new(2),
                     TechnologyName::Simple("t2".to_string()),
-                    vec![TechnologyId::new(0), TechnologyId::new(1)]
+                    vec![TechnologyId::new(0), TechnologyId::new(1)],
+                    vec![TechnologyId::new(3), TechnologyId::new(4)],
                 ),
                 Technology::new(
                     TechnologyId::new(3),
                     TechnologyName::Simple("t3".to_string()),
-                    vec![TechnologyId::new(2)]
+                    vec![TechnologyId::new(2)],
+                    vec![],
                 ),
                 Technology::new(
                     TechnologyId::new(4),
                     TechnologyName::Simple("t4".to_string()),
-                    vec![TechnologyId::new(2)]
+                    vec![TechnologyId::new(2)],
+                    vec![],
                 ),
             ]))
         );
@@ -115,12 +141,14 @@ mod tests {
                 Technology::new(
                     TechnologyId::new(0),
                     TechnologyName::Simple("t0".to_string()),
-                    vec![TechnologyId::new(1)]
+                    vec![TechnologyId::new(1)],
+                    vec![],
                 ),
                 Technology::new(
                     TechnologyId::new(1),
                     TechnologyName::Simple("t1".to_string()),
-                    vec![]
+                    vec![],
+                    vec![TechnologyId::new(0)],
                 )
             ]))
         );
