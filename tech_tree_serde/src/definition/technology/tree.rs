@@ -38,10 +38,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_tree() {
+    fn test_converting() {
         let definition = TechnologyTreeDefinition::new(vec![
             TechnologyDefinition::new("t0".to_string(), vec![]),
-            TechnologyDefinition::new("t1".to_string(), vec!["t2".to_string()]),
+            TechnologyDefinition::new("t1".to_string(), vec!["t0".to_string()]),
             TechnologyDefinition::new("t2".to_string(), vec!["t0".to_string(), "t1".to_string()]),
         ]);
 
