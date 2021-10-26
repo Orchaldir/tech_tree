@@ -48,6 +48,20 @@ impl Technology {
         }
     }
 
+    pub fn simple2(
+        id: usize,
+        name: &str,
+        predecessors: Vec<usize>,
+        successors: Vec<usize>,
+    ) -> Self {
+        Technology {
+            id: TechnologyId(id),
+            name: TechnologyName::Simple(name.to_string()),
+            predecessors: predecessors.into_iter().map(TechnologyId::new).collect(),
+            successors: successors.into_iter().map(TechnologyId::new).collect(),
+        }
+    }
+
     pub fn id(&self) -> &TechnologyId {
         &self.id
     }

@@ -94,36 +94,11 @@ mod tests {
         assert_eq!(
             create_tree(input),
             Ok(TechnologyTree::new(vec![
-                Technology::new(
-                    TechnologyId::new(0),
-                    TechnologyName::Simple("t0".to_string()),
-                    vec![],
-                    vec![TechnologyId::new(2)],
-                ),
-                Technology::new(
-                    TechnologyId::new(1),
-                    TechnologyName::Simple("t1".to_string()),
-                    vec![],
-                    vec![TechnologyId::new(2)],
-                ),
-                Technology::new(
-                    TechnologyId::new(2),
-                    TechnologyName::Simple("t2".to_string()),
-                    vec![TechnologyId::new(0), TechnologyId::new(1)],
-                    vec![TechnologyId::new(3), TechnologyId::new(4)],
-                ),
-                Technology::new(
-                    TechnologyId::new(3),
-                    TechnologyName::Simple("t3".to_string()),
-                    vec![TechnologyId::new(2)],
-                    vec![],
-                ),
-                Technology::new(
-                    TechnologyId::new(4),
-                    TechnologyName::Simple("t4".to_string()),
-                    vec![TechnologyId::new(2)],
-                    vec![],
-                ),
+                Technology::simple2(0, "t0", vec![], vec![2]),
+                Technology::simple2(1, "t1", vec![], vec![2]),
+                Technology::simple2(2, "t2", vec![0, 1], vec![3, 4]),
+                Technology::simple2(3, "t3", vec![2], vec![]),
+                Technology::simple2(4, "t4", vec![2], vec![]),
             ]))
         );
     }
@@ -138,18 +113,8 @@ mod tests {
         assert_eq!(
             create_tree(input),
             Ok(TechnologyTree::new(vec![
-                Technology::new(
-                    TechnologyId::new(0),
-                    TechnologyName::Simple("t0".to_string()),
-                    vec![TechnologyId::new(1)],
-                    vec![],
-                ),
-                Technology::new(
-                    TechnologyId::new(1),
-                    TechnologyName::Simple("t1".to_string()),
-                    vec![],
-                    vec![TechnologyId::new(0)],
-                )
+                Technology::simple2(0, "t0", vec![1], vec![]),
+                Technology::simple2(1, "t1", vec![], vec![0]),
             ]))
         );
     }
