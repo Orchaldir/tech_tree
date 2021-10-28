@@ -1,5 +1,6 @@
-use svg::node::element::Rectangle;
+use svg::node::element::path::Data;
 use svg::node::element::Text;
+use svg::node::element::{Definitions, Marker, Path, Rectangle};
 use svg::Document;
 
 #[test]
@@ -14,6 +15,24 @@ fn create_svg() {
     let width = text.len() as i32 * font_width + 2 * padding;
     let width_half = width / 2;
     let height = font_size * 2;
+
+    let arrow_head_data = Data::new()
+        .move_to((0, 0))
+        .line_to((10, 7))
+        .line_to((0, 14))
+        .close();
+
+    let arrow_head_path = Path::new().set("fill", "black").set("d", arrow_head_data);
+
+    let arrow_head = Marker::new()
+        .set("id", "head")
+        .set("viewBox", (0, 0, 10, 10))
+        .set("orient", "auto")
+        .set("refX", 1)
+        .set("refY", 7)
+        .add(arrow_head_path);
+
+    let definitions = Definitions::new().add(arrow_head);
 
     let box_node = Rectangle::new()
         .set("x", x - width_half)
@@ -34,10 +53,24 @@ fn create_svg() {
         //.set("dominant-baseline", "middle")
         .add(text_element);
 
+    let arrow_data = Data::new()
+        .move_to((10, 10))
+        .line_by((32, 52))
+        .line_by((10, -52));
+
+    let arrow_path = Path::new()
+        .set("marker-end", "url(#head)")
+        .set("fill", "none")
+        .set("stroke", "black")
+        .set("stroke-width", 1)
+        .set("d", arrow_data);
+
     let document = Document::new()
         .set("viewBox", (0, 0, 70, 70))
+        .add(definitions)
         .add(box_node)
-        .add(text_node);
+        .add(text_node)
+        .add(arrow_path);
 
     svg::save("image.svg", &document).unwrap();
 }
