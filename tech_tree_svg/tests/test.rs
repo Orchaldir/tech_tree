@@ -1,5 +1,4 @@
-use svg::node::element::path::Data;
-use svg::node::element::Path;
+use svg::node::element::Rectangle;
 use svg::node::element::Text;
 use svg::Document;
 
@@ -16,18 +15,14 @@ fn create_svg() {
     let width_half = width / 2;
     let height = font_size * 2;
 
-    let box_data = Data::new()
-        .move_to((x - width_half, y - font_size))
-        .line_by((width, 0))
-        .line_by((0, height))
-        .line_by((-width, 0))
-        .close();
-
-    let box_node = Path::new()
-        .set("fill", "none")
+    let box_node = Rectangle::new()
+        .set("x", x - width_half)
+        .set("y", y - font_size)
+        .set("width", width)
+        .set("height", height)
+        .set("fill", "#4fc3ff")
         .set("stroke", "black")
-        .set("stroke-width", 1)
-        .set("d", box_data);
+        .set("stroke-width", 1);
 
     let text_element = svg::node::Text::new(text);
 
