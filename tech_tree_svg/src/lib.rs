@@ -2,6 +2,7 @@ use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Definitions, Marker, Path, Rectangle};
 use svg::{Document, Node};
+use tech_tree::rendering::renderer::Renderer;
 
 pub struct SvgBuilder {
     document: Document,
@@ -40,7 +41,32 @@ impl SvgBuilder {
         Definitions::new().add(arrow_head)
     }
 
-    pub fn add_technology(&mut self, text: &str, x: u32, y: u32) {
+    pub fn export(&self, path: &str) {
+        svg::save(path, &self.document).unwrap();
+    }
+}
+
+impl Renderer for SvgBuilder {
+    fn render_arrow(&mut self, points: Vec<(i32, i32)>) {
+        if let Some((start, line)) = points.split_first() {
+            let mut arrow_data = Data::new().move_to(*start);
+
+            for point in line {
+                arrow_data = arrow_data.line_to(*point);
+            }
+
+            let arrow_path = Path::new()
+                .set("marker-end", "url(#head)")
+                .set("fill", "none")
+                .set("stroke", "black")
+                .set("stroke-width", 1)
+                .set("d", arrow_data);
+
+            self.document.append(arrow_path);
+        }
+    }
+
+    fn render_technology(&mut self, text: &str, x: u32, y: u32) {
         let font_width = self.font_size / 2;
         let text_offset = self.font_size / 3;
         let width = text.len() as u32 * font_width + 2 * self.padding;
@@ -68,28 +94,5 @@ impl SvgBuilder {
 
         self.document.append(box_node);
         self.document.append(text_node);
-    }
-
-    pub fn add_arrow(&mut self, points: Vec<(i32, i32)>) {
-        if let Some((start, line)) = points.split_first() {
-            let mut arrow_data = Data::new().move_to(*start);
-
-            for point in line {
-                arrow_data = arrow_data.line_to(*point);
-            }
-
-            let arrow_path = Path::new()
-                .set("marker-end", "url(#head)")
-                .set("fill", "none")
-                .set("stroke", "black")
-                .set("stroke-width", 1)
-                .set("d", arrow_data);
-
-            self.document.append(arrow_path);
-        }
-    }
-
-    pub fn export(&self, path: &str) {
-        svg::save(path, &self.document).unwrap();
     }
 }
