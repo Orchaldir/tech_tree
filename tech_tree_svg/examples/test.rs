@@ -2,11 +2,8 @@ use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Definitions, Marker, Path, Rectangle};
 use svg::Document;
-use tech_tree::rendering::renderer::Renderer;
-use tech_tree_svg::SvgBuilder;
 
-#[test]
-fn test_document() {
+fn main() {
     let x = 35i32;
     let y = 35i32;
     let font_size = 10i32;
@@ -75,14 +72,4 @@ fn test_document() {
         .add(arrow_path);
 
     svg::save("document.svg", &document).unwrap();
-}
-
-#[test]
-fn test_builder() {
-    let mut builder = SvgBuilder::new(100, 150, 10, 10);
-
-    builder.render_technology("Tech 1", 50, 20);
-    builder.render_technology("Tech 2", 50, 70);
-    builder.render_arrow(vec![(50, 30), (50, 60)]);
-    builder.export("builder.svg");
 }
