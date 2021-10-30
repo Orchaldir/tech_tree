@@ -39,6 +39,15 @@ impl SvgBuilder {
         Definitions::new().add(arrow_head)
     }
 
+    fn get_text_width(&self, text: &str) -> u32 {
+        let font_width = self.font_size / 2;
+        text.len() as u32 * font_width + 2 * self.padding
+    }
+
+    fn get_text_height(&self) -> u32 {
+        self.font_size * 2
+    }
+
     pub fn export(&self, path: &str) {
         svg::save(path, &self.document).unwrap();
     }
@@ -69,17 +78,15 @@ impl Renderer for SvgBuilder {
     }
 
     fn render_technology(&mut self, text: &str, x: u32, y: u32) {
-        let font_width = self.font_size / 2;
         let text_offset = self.font_size / 3;
-        let width = text.len() as u32 * font_width + 2 * self.padding;
+        let width = self.get_text_width(text);
         let width_half = width / 2;
-        let height = self.font_size * 2;
 
         let box_node = Rectangle::new()
             .set("x", x - width_half)
             .set("y", y.saturating_sub(self.font_size))
             .set("width", width)
-            .set("height", height)
+            .set("height", self.get_text_height())
             .set("fill", "#4fc3ff")
             .set("stroke", "black")
             .set("stroke-width", 1);
@@ -96,5 +103,9 @@ impl Renderer for SvgBuilder {
 
         self.document.append(box_node);
         self.document.append(text_node);
+    }
+
+    fn get_size_of_technology(&self, text: &str) -> (u32, u32) {
+        (self.get_text_width(text), self.get_text_height())
     }
 }
