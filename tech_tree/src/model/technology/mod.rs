@@ -73,6 +73,10 @@ impl Technology {
     pub fn predecessors(&self) -> &Vec<TechnologyId> {
         &self.predecessors
     }
+
+    pub fn successors(&self) -> &Vec<TechnologyId> {
+        &self.successors
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
