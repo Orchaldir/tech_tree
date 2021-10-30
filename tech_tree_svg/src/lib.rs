@@ -7,15 +7,17 @@ use tech_tree::rendering::renderer::Renderer;
 pub struct SvgBuilder {
     document: Document,
     font_size: u32,
-    padding: u32,
+    text_padding: u32,
+    technology_padding: u32,
 }
 
 impl SvgBuilder {
-    pub fn new(font_size: u32, padding: u32) -> Self {
+    pub fn new(font_size: u32, text_padding: u32, technology_padding: u32) -> Self {
         Self {
             document: Document::new().add(Self::create_definitions()),
             font_size,
-            padding,
+            text_padding,
+            technology_padding,
         }
     }
 
@@ -41,7 +43,7 @@ impl SvgBuilder {
 
     fn get_text_width(&self, text: &str) -> u32 {
         let font_width = self.font_size / 2;
-        text.len() as u32 * font_width + 2 * self.padding
+        text.len() as u32 * font_width + 2 * self.text_padding
     }
 
     fn get_text_height(&self) -> u32 {
@@ -106,6 +108,9 @@ impl Renderer for SvgBuilder {
     }
 
     fn get_size_of_technology(&self, text: &str) -> (u32, u32) {
-        (self.get_text_width(text), self.get_text_height())
+        (
+            self.get_text_width(text) + 2 * self.technology_padding,
+            self.get_text_height() + 2 * self.technology_padding,
+        )
     }
 }
