@@ -11,11 +11,9 @@ pub struct SvgBuilder {
 }
 
 impl SvgBuilder {
-    pub fn new(width: u32, height: u32, font_size: u32, padding: u32) -> Self {
+    pub fn new(font_size: u32, padding: u32) -> Self {
         Self {
-            document: Document::new()
-                .set("viewBox", (0, 0, width, height))
-                .add(Self::create_definitions()),
+            document: Document::new().add(Self::create_definitions()),
             font_size,
             padding,
         }
@@ -47,6 +45,10 @@ impl SvgBuilder {
 }
 
 impl Renderer for SvgBuilder {
+    fn init(&mut self, width: u32, height: u32) {
+        self.document.assign("viewBox", (0, 0, width, height));
+    }
+
     fn render_arrow(&mut self, points: Vec<(i32, i32)>) {
         if let Some((start, line)) = points.split_first() {
             let mut arrow_data = Data::new().move_to(*start);
