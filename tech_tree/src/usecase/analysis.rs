@@ -2,7 +2,8 @@ use crate::model::technology::tree::TechnologyTree;
 use crate::model::technology::TechnologyId;
 use std::collections::VecDeque;
 
-pub fn calculate_number_of_predecessors(tree: &TechnologyTree) -> Vec<u32> {
+/// Calculates the depth, which is the length of the longest chain of predecessors, for each technology.
+pub fn calculate_depth(tree: &TechnologyTree) -> Vec<u32> {
     let mut numbers = vec![0; tree.technologies().len()];
     let mut queue = VecDeque::from(calculate_technologies_without_predecessors(tree));
 
@@ -20,6 +21,17 @@ pub fn calculate_number_of_predecessors(tree: &TechnologyTree) -> Vec<u32> {
     numbers
 }
 
+pub fn group_by_depth(depth: &[u32]) -> Vec<Vec<TechnologyId>> {
+    let max_depth = *depth.iter().max().unwrap_or(&0);
+    let mut groups = vec![Vec::new(); (max_depth + 1) as usize];
+
+    for (i, depth) in depth.iter().enumerate() {
+        groups[*depth as usize].push(TechnologyId::new(i));
+    }
+
+    groups
+}
+
 pub fn calculate_technologies_without_predecessors(tree: &TechnologyTree) -> Vec<TechnologyId> {
     tree.technologies()
         .iter()
@@ -35,10 +47,25 @@ mod tests {
     use crate::usecase::creation::create_tree;
 
     #[test]
-    fn test_calculate_number_of_predecessors() {
+    fn test_calculate_depth() {
+        assert_eq!(calculate_depth(&init_tree()), vec![0, 0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_group_by_depth() {
         assert_eq!(
-            calculate_number_of_predecessors(&init_tree()),
-            vec![0, 0, 1, 2, 3]
+            group_by_depth(&vec![0, 2, 2, 0, 2, 4]),
+            vec![
+                vec![TechnologyId::new(0), TechnologyId::new(3)],
+                vec![],
+                vec![
+                    TechnologyId::new(1),
+                    TechnologyId::new(2),
+                    TechnologyId::new(4)
+                ],
+                vec![],
+                vec![TechnologyId::new(5)],
+            ]
         );
     }
 
