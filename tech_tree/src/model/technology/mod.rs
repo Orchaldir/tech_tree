@@ -86,6 +86,13 @@ impl Input {
         Input { name, predecessors }
     }
 
+    pub fn test(name: &str, predecessors: Vec<&str>) -> Self {
+        Input {
+            name: name.to_string(),
+            predecessors: predecessors.into_iter().map(|p| p.to_string()).collect(),
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }

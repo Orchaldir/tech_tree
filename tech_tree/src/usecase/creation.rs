@@ -84,11 +84,11 @@ mod tests {
     #[test]
     fn test_create_tree() {
         let input = vec![
-            Input::new("t0".to_string(), vec![]),
-            Input::new("t1".to_string(), vec![]),
-            Input::new("t2".to_string(), vec!["t0".to_string(), "t1".to_string()]),
-            Input::new("t3".to_string(), vec!["t2".to_string()]),
-            Input::new("t4".to_string(), vec!["t2".to_string()]),
+            Input::test("t0", vec![]),
+            Input::test("t1", vec![]),
+            Input::test("t2", vec!["t0", "t1"]),
+            Input::test("t3", vec!["t2"]),
+            Input::test("t4", vec!["t2"]),
         ];
 
         assert_eq!(
@@ -105,10 +105,7 @@ mod tests {
 
     #[test]
     fn test_wrong_order() {
-        let input = vec![
-            Input::new("t0".to_string(), vec!["t1".to_string()]),
-            Input::new("t1".to_string(), vec![]),
-        ];
+        let input = vec![Input::test("t0", vec!["t1"]), Input::test("t1", vec![])];
 
         assert_eq!(
             create_tree(input),
@@ -122,7 +119,7 @@ mod tests {
     #[test]
     fn test_invalid_name() {
         let name = "   ";
-        let input = vec![Input::new(name.to_string(), vec![])];
+        let input = vec![Input::test(name, vec![])];
 
         assert_eq!(
             create_tree(input),
@@ -133,10 +130,7 @@ mod tests {
     #[test]
     fn test_duplicate_name() {
         let name = "duplicate";
-        let input = vec![
-            Input::new(name.to_string(), vec![]),
-            Input::new(name.to_string(), vec![]),
-        ];
+        let input = vec![Input::test(name, vec![]), Input::test(name, vec![])];
 
         assert_eq!(
             create_tree(input),
@@ -147,10 +141,7 @@ mod tests {
     #[test]
     fn test_unknown_predecessor() {
         let predecessor = "unknown";
-        let input = vec![Input::new(
-            "name".to_string(),
-            vec![predecessor.to_string()],
-        )];
+        let input = vec![Input::test("name", vec![predecessor])];
 
         assert_eq!(
             create_tree(input),
