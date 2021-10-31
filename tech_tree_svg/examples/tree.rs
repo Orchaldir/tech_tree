@@ -9,7 +9,7 @@ fn main() {
         Input::test("Technology 1", vec![]),
         Input::test("Technology 2", vec!["Technology 0", "Technology 1"]),
         Input::test("Technology 3", vec!["Technology 2"]),
-        Input::test("Technology 4", vec!["Technology 2"]),
+        Input::test("Technology 4", vec!["Technology 2", "Technology 1"]),
     ])
     .unwrap();
     let mut builder = SvgBuilder::new(10, 10);

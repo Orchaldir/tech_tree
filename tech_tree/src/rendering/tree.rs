@@ -26,12 +26,15 @@ impl TreeRenderer {
 
             if !technology.successors().is_empty() {
                 let link_start = cell.get_link_start();
+                let link_start2 = (link_start.0, link_start.1 + self.padding);
 
                 for successor in technology.successors() {
                     let successor_cell = grid.get_cell(*successor).unwrap();
                     let link_end = successor_cell.get_link_end();
+                    let link_end2 = (link_end.0, link_end.1 - self.padding);
+                    let link_end = (link_end.0, link_end.1 - 3);
 
-                    renderer.render_link(vec![link_start, link_end]);
+                    renderer.render_link(vec![link_start, link_start2, link_end2, link_end]);
                 }
             }
         }
