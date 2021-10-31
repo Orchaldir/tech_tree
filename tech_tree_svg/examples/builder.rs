@@ -8,5 +8,6 @@ fn main() {
     builder.render_technology("Tech 1", 50, 20);
     builder.render_technology("Tech 2", 50, 70);
     builder.render_link(vec![(50, 30), (50, 60)]);
-    builder.export("builder.svg");
+
+    builder.export("builder.svg").expect("Failed test");
 }

@@ -13,10 +13,11 @@ pub fn read<T: DeserializeOwned>(path: &Path) -> Result<T> {
 }
 
 pub fn write<T: Serialize>(object: &T, path: &Path) -> Result<()> {
-    let mut file = File::create(path).context(format!("Failed to write to {:?}", path))?;
-    let s = serde_yaml::to_string(object).context(format!("Failed to parse {:?}", path))?;
+    let mut file = File::create(path).context(format!("Failed to open {:?}", path))?;
+    let s = serde_yaml::to_string(object).context("Failed to convert to yaml")?;
 
-    file.write_all(s.as_bytes())?;
+    file.write_all(s.as_bytes())
+        .context(format!("Failed to write to {:?}", path))?;
 
     Ok(())
 }

@@ -17,5 +17,5 @@ fn main() {
 
     tree_renderer.render(&mut builder, &tree);
 
-    builder.export("tree.svg");
+    builder.export("tree.svg").expect("Failed test");
 }

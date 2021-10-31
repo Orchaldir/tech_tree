@@ -1,3 +1,5 @@
+use anyhow::{Context, Result};
+use std::io::BufWriter;
 use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Definitions, Marker, Path, Rectangle};
@@ -50,8 +52,17 @@ impl SvgBuilder {
         self.font_size * 2
     }
 
-    pub fn export(&self, path: &str) {
-        svg::save(path, &self.document).unwrap();
+    pub fn export(&self, path: &str) -> Result<()> {
+        svg::save(path, &self.document).context(format!("Failed to export to {:?}", path))
+    }
+
+    pub fn export_as_string(&self) -> Result<String> {
+        let mut buf = BufWriter::new(Vec::new());
+
+        svg::write(&mut buf, &self.document).context("Failed to write the document")?;
+
+        let bytes = buf.into_inner().context("Failed to get bytes")?;
+        String::from_utf8(bytes).context("Failed to parse bytes")
     }
 }
 
@@ -112,5 +123,39 @@ impl Renderer for SvgBuilder {
             self.get_text_width(text) + 2 * self.technology_padding,
             self.get_text_height() + 2 * self.technology_padding,
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_builder() {
+        let mut builder = SvgBuilder::new(10, 10, 20);
+
+        builder.init(100, 150);
+        builder.render_technology("Tech 1", 50, 20);
+        builder.render_technology("Tech 2", 50, 70);
+        builder.render_link(vec![(50, 30), (50, 60)]);
+
+        let result = "<svg viewBox=\"0 0 100 150\" xmlns=\"http://www.w3.org/2000/svg\">
+<defs>
+<marker id=\"head\" orient=\"auto\" refX=\"1\" refY=\"7\" viewBox=\"0 0 10 10\">
+<path d=\"M0,0 L10,7 L0,14 z\" fill=\"black\"/>
+</marker>
+</defs>
+<rect fill=\"#4fc3ff\" height=\"20\" stroke=\"black\" stroke-width=\"1\" width=\"50\" x=\"25\" y=\"10\"/>
+<text font-size=\"10\" text-anchor=\"middle\" x=\"50\" y=\"23\">
+Tech 1
+</text>
+<rect fill=\"#4fc3ff\" height=\"20\" stroke=\"black\" stroke-width=\"1\" width=\"50\" x=\"25\" y=\"60\"/>
+<text font-size=\"10\" text-anchor=\"middle\" x=\"50\" y=\"73\">
+Tech 2
+</text>
+<path d=\"M50,30 L50,60\" fill=\"none\" marker-end=\"url(#head)\" stroke=\"black\" stroke-width=\"1\"/>
+</svg>";
+
+        assert_eq!(builder.export_as_string().unwrap(), result.to_string());
     }
 }
