@@ -74,6 +74,16 @@ impl Technology {
         &self.predecessors
     }
 
+    pub fn get_predecessor_index(&self, id: TechnologyId) -> Option<usize> {
+        for (index, predecessor) in self.predecessors.iter().enumerate() {
+            if *predecessor == id {
+                return Some(index);
+            }
+        }
+
+        None
+    }
+
     pub fn successors(&self) -> &Vec<TechnologyId> {
         &self.successors
     }

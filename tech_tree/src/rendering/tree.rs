@@ -28,9 +28,8 @@ impl TreeRenderer {
                 let link_start = cell.get_link_start();
                 let link_start2 = (link_start.0, link_start.1 + self.padding);
 
-                for successor in technology.successors() {
-                    let successor_cell = grid.get_cell(*successor).unwrap();
-                    let link_end = successor_cell.get_link_end();
+                for successor_id in technology.successors() {
+                    let link_end = self.calculate_link_end(tree, &grid, cell, *successor_id);
                     let link_end2 = (link_end.0, link_end.1 - self.padding);
                     let link_end = (link_end.0, link_end.1 - 3);
 
@@ -39,11 +38,27 @@ impl TreeRenderer {
             }
         }
     }
+    fn calculate_link_end(
+        &self,
+        tree: &TechnologyTree,
+        grid: &Grid,
+        cell: &GridCell,
+        successor_id: TechnologyId,
+    ) -> (u32, u32) {
+        let offset = tree
+            .get(successor_id)
+            .and_then(|successor| successor.get_predecessor_index(cell.id))
+            .unwrap_or_default() as u32
+            * 3;
+        let successor_cell = grid.get_cell(successor_id).unwrap();
+        let link_end = successor_cell.get_link_end();
+        (link_end.0 + offset, link_end.1)
+    }
 
     fn calculate_grid(&self, renderer: &mut dyn Renderer, tree: &TechnologyTree) -> Grid {
         let depth = calculate_depth(tree);
         let groups = group_by_depth(&depth);
-        let sizes = self.get_sizes(renderer, tree, &groups);
+        let sizes = self.calculate_sizes(renderer, tree, &groups);
         let mut cells = Vec::new();
 
         let mut max_width = 0;
@@ -76,7 +91,7 @@ impl TreeRenderer {
         Grid::new(max_width, y, cells)
     }
 
-    fn get_sizes(
+    fn calculate_sizes(
         &self,
         renderer: &mut dyn Renderer,
         tree: &TechnologyTree,
