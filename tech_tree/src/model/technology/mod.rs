@@ -73,6 +73,10 @@ impl Technology {
     pub fn predecessors(&self) -> &Vec<TechnologyId> {
         &self.predecessors
     }
+
+    pub fn successors(&self) -> &Vec<TechnologyId> {
+        &self.successors
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -86,11 +90,47 @@ impl Input {
         Input { name, predecessors }
     }
 
+    pub fn test(name: &str, predecessors: Vec<&str>) -> Self {
+        Input {
+            name: name.to_string(),
+            predecessors: predecessors.into_iter().map(|p| p.to_string()).collect(),
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
 
     pub fn predecessors(&self) -> &Vec<String> {
         &self.predecessors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_technology() {
+        let technology = Technology::simple2(2, "Tech", vec![0, 1], vec![3, 4]);
+
+        assert_eq!(technology.name().get_full(), "Tech");
+        assert_eq!(technology.id(), &TechnologyId::new(2));
+        assert_eq!(
+            technology.predecessors(),
+            &vec![TechnologyId::new(0), TechnologyId::new(1)]
+        );
+        assert_eq!(
+            technology.successors(),
+            &vec![TechnologyId::new(3), TechnologyId::new(4)]
+        );
+    }
+
+    #[test]
+    fn test_input() {
+        let input = Input::test("A", vec!["B", "C"]);
+
+        assert_eq!(input.name(), "A");
+        assert_eq!(input.predecessors(), &vec!["B", "C"]);
     }
 }
