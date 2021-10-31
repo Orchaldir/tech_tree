@@ -60,7 +60,7 @@ impl Renderer for SvgBuilder {
         self.document.assign("viewBox", (0, 0, width, height));
     }
 
-    fn render_arrow(&mut self, points: Vec<(i32, i32)>) {
+    fn render_link(&mut self, points: Vec<(i32, i32)>) {
         if let Some((start, line)) = points.split_first() {
             let mut arrow_data = Data::new().move_to(*start);
 

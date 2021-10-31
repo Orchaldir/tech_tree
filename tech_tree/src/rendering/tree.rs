@@ -89,7 +89,7 @@ mod tests {
             self.height = height;
         }
 
-        fn render_arrow(&mut self, _points: Vec<(i32, i32)>) {}
+        fn render_link(&mut self, _points: Vec<(i32, i32)>) {}
 
         fn render_technology(&mut self, text: &str, x: u32, y: u32) {
             self.technologies.insert(text.to_string(), (x, y));
