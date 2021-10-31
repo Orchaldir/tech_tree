@@ -143,7 +143,7 @@ mod tests {
             self.height = height;
         }
 
-        fn render_link(&mut self, points: Vec<(u32, u32)>) {}
+        fn render_link(&mut self, _points: Vec<(u32, u32)>) {}
 
         fn render_technology(&mut self, text: &str, x: u32, y: u32) {
             self.technologies.insert(text.to_string(), (x, y));
@@ -169,7 +169,7 @@ mod tests {
             renderer.technologies,
             HashMap::from([
                 ("a".to_string(), (10, 15)),
-                ("bb".to_string(), (15, 55)),
+                ("bb".to_string(), (15, 65)),
                 ("ccc".to_string(), (50, 65)),
             ])
         );
