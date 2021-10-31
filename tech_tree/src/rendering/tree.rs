@@ -1,71 +1,125 @@
 use crate::model::technology::tree::TechnologyTree;
 use crate::model::technology::TechnologyId;
+use crate::rendering::grid::{Grid, GridCell};
 use crate::rendering::renderer::Renderer;
 use crate::usecase::analysis::{calculate_depth, group_by_depth};
+use itertools::izip;
 
-#[derive(Default)]
-pub struct TreeRenderer;
+pub struct TreeRenderer {
+    padding: u32,
+}
 
 impl TreeRenderer {
-    pub fn render(&mut self, renderer: &mut dyn Renderer, tree: &TechnologyTree) {
-        let depth = calculate_depth(tree);
-        let groups = group_by_depth(&depth);
-        let (width, height) = self.get_size(renderer, &groups, tree);
-
-        renderer.init(width, height);
-
-        let mut y = 0;
-
-        for column in groups {
-            let mut x = 0;
-            let mut max_height = 0;
-
-            for id in column {
-                let technology = tree.get(id).unwrap();
-                let (t_width, t_height) =
-                    renderer.get_size_of_technology(technology.name().get_full());
-
-                renderer.render_technology(
-                    technology.name().get_full(),
-                    x + t_width / 2,
-                    y + t_height / 2,
-                );
-
-                x += t_width;
-                max_height = max_height.max(t_height);
-            }
-
-            y += max_height;
-        }
+    pub fn new(padding: u32) -> Self {
+        Self { padding }
     }
 
-    fn get_size(
+    pub fn render(&mut self, renderer: &mut dyn Renderer, tree: &TechnologyTree) {
+        let grid = self.calculate_grid(renderer, tree);
+
+        renderer.init(grid.width(), grid.height());
+
+        for cell in grid.cells() {
+            let technology = tree.get(cell.id).unwrap();
+
+            renderer.render_technology(technology.name().get_full(), cell.center_x, cell.center_y);
+
+            if !technology.successors().is_empty() {
+                let link_start = cell.get_link_start();
+                let link_start2 = (link_start.0, link_start.1 + self.padding);
+
+                for successor_id in technology.successors() {
+                    let link_end = self.calculate_link_end(tree, &grid, cell, *successor_id);
+                    let link_end2 = (link_end.0, link_end.1 - self.padding);
+                    let link_end = (link_end.0, link_end.1 - 3);
+
+                    renderer.render_link(vec![link_start, link_start2, link_end2, link_end]);
+                }
+            }
+        }
+    }
+    fn calculate_link_end(
+        &self,
+        tree: &TechnologyTree,
+        grid: &Grid,
+        cell: &GridCell,
+        successor_id: TechnologyId,
+    ) -> (u32, u32) {
+        let offset = tree
+            .get(successor_id)
+            .and_then(|successor| successor.get_predecessor_index(cell.id))
+            .unwrap_or_default() as u32
+            * 3;
+        let successor_cell = grid.get_cell(successor_id).unwrap();
+        let link_end = successor_cell.get_link_end();
+        (link_end.0 + offset, link_end.1)
+    }
+
+    fn calculate_grid(&self, renderer: &mut dyn Renderer, tree: &TechnologyTree) -> Grid {
+        let depth = calculate_depth(tree);
+        let groups = group_by_depth(&depth);
+        let sizes = self.calculate_sizes(renderer, tree, &groups);
+        let mut cells = Vec::new();
+
+        let mut max_width = 0;
+        let mut y = 0;
+
+        for (column_id, column_size) in izip!(groups, sizes) {
+            let mut x = 0;
+            let mut column_height = 0;
+
+            for (id, (width, height)) in izip!(column_id, column_size) {
+                let padded_width = width + 2 * self.padding;
+                let padded_height = height + 2 * self.padding;
+
+                cells.push(GridCell::new(
+                    id,
+                    x + padded_width / 2,
+                    y + padded_height / 2,
+                    width / 2,
+                    height / 2,
+                ));
+
+                x += padded_width;
+                column_height = padded_height;
+            }
+
+            max_width = max_width.max(x);
+            y += column_height;
+        }
+
+        Grid::new(max_width, y, cells)
+    }
+
+    fn calculate_sizes(
         &self,
         renderer: &mut dyn Renderer,
-        groups: &[Vec<TechnologyId>],
         tree: &TechnologyTree,
-    ) -> (u32, u32) {
-        let mut width = 0;
-        let mut height = 0;
+        groups: &[Vec<TechnologyId>],
+    ) -> Vec<Vec<(u32, u32)>> {
+        let mut sizes = Vec::new();
 
         for column in groups {
-            let mut column_width = 0;
+            let mut widths = Vec::new();
             let mut max_height = 0;
 
             for id in column {
                 let technology = tree.get(*id).unwrap();
-                let (t_width, t_height) =
-                    renderer.get_size_of_technology(technology.name().get_full());
+                let (width, height) = renderer.get_size_of_technology(technology.name().get_full());
 
-                column_width += t_width;
-                max_height = max_height.max(t_height);
+                widths.push(width);
+                max_height = max_height.max(height);
             }
 
-            width = width.max(column_width);
-            height += max_height;
+            sizes.push(
+                widths
+                    .into_iter()
+                    .map(|width| (width, max_height))
+                    .collect(),
+            );
         }
 
-        (width, height)
+        sizes
     }
 }
 
@@ -89,7 +143,7 @@ mod tests {
             self.height = height;
         }
 
-        fn render_link(&mut self, _points: Vec<(i32, i32)>) {}
+        fn render_link(&mut self, _points: Vec<(u32, u32)>) {}
 
         fn render_technology(&mut self, text: &str, x: u32, y: u32) {
             self.technologies.insert(text.to_string(), (x, y));
@@ -105,18 +159,18 @@ mod tests {
     fn test_render() {
         let tree = init_tree();
         let mut renderer = MockRender::default();
-        let mut tree_renderer = TreeRenderer::default();
+        let mut tree_renderer = TreeRenderer::new(5);
 
         tree_renderer.render(&mut renderer, &tree);
 
-        assert_eq!(renderer.width, 50);
-        assert_eq!(renderer.height, 80);
+        assert_eq!(renderer.width, 70);
+        assert_eq!(renderer.height, 100);
         assert_eq!(
             renderer.technologies,
             HashMap::from([
-                ("a".to_string(), (5, 10)),
-                ("bb".to_string(), (10, 40)),
-                ("ccc".to_string(), (35, 50)),
+                ("a".to_string(), (10, 15)),
+                ("bb".to_string(), (15, 65)),
+                ("ccc".to_string(), (50, 65)),
             ])
         );
     }

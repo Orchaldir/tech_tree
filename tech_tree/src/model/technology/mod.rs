@@ -74,6 +74,16 @@ impl Technology {
         &self.predecessors
     }
 
+    pub fn get_predecessor_index(&self, id: TechnologyId) -> Option<usize> {
+        for (index, predecessor) in self.predecessors.iter().enumerate() {
+            if *predecessor == id {
+                return Some(index);
+            }
+        }
+
+        None
+    }
+
     pub fn successors(&self) -> &Vec<TechnologyId> {
         &self.successors
     }
@@ -123,6 +133,24 @@ mod tests {
         assert_eq!(
             technology.successors(),
             &vec![TechnologyId::new(3), TechnologyId::new(4)]
+        );
+    }
+
+    #[test]
+    fn test_get_predecessor_index() {
+        let technology = Technology::simple2(0, "Tech", vec![2, 3], vec![1]);
+
+        assert_predecessor_index(&technology, 0, None);
+        assert_predecessor_index(&technology, 1, None);
+        assert_predecessor_index(&technology, 2, Some(0));
+        assert_predecessor_index(&technology, 3, Some(1));
+        assert_predecessor_index(&technology, 4, None);
+    }
+
+    fn assert_predecessor_index(technology: &Technology, id: usize, result: Option<usize>) {
+        assert_eq!(
+            technology.get_predecessor_index(TechnologyId::new(id)),
+            result
         );
     }
 

@@ -10,16 +10,14 @@ pub struct SvgBuilder {
     document: Document,
     font_size: u32,
     text_padding: u32,
-    technology_padding: u32,
 }
 
 impl SvgBuilder {
-    pub fn new(font_size: u32, text_padding: u32, technology_padding: u32) -> Self {
+    pub fn new(font_size: u32, text_padding: u32) -> Self {
         Self {
             document: Document::new().add(Self::create_definitions()),
             font_size,
             text_padding,
-            technology_padding,
         }
     }
 
@@ -71,7 +69,7 @@ impl Renderer for SvgBuilder {
         self.document.assign("viewBox", (0, 0, width, height));
     }
 
-    fn render_link(&mut self, points: Vec<(i32, i32)>) {
+    fn render_link(&mut self, points: Vec<(u32, u32)>) {
         if let Some((start, line)) = points.split_first() {
             let mut arrow_data = Data::new().move_to(*start);
 
@@ -119,10 +117,7 @@ impl Renderer for SvgBuilder {
     }
 
     fn get_size_of_technology(&self, text: &str) -> (u32, u32) {
-        (
-            self.get_text_width(text) + 2 * self.technology_padding,
-            self.get_text_height() + 2 * self.technology_padding,
-        )
+        (self.get_text_width(text), self.get_text_height())
     }
 }
 
@@ -132,15 +127,15 @@ mod tests {
 
     #[test]
     fn test_get_size_of_technology() {
-        let builder = SvgBuilder::new(10, 20, 30);
+        let builder = SvgBuilder::new(10, 20);
 
-        assert_eq!(builder.get_size_of_technology("test"), (120, 80));
-        assert_eq!(builder.get_size_of_technology("another"), (135, 80));
+        assert_eq!(builder.get_size_of_technology("test"), (60, 20));
+        assert_eq!(builder.get_size_of_technology("another"), (75, 20));
     }
 
     #[test]
     fn test_export() {
-        let mut builder = SvgBuilder::new(10, 10, 20);
+        let mut builder = SvgBuilder::new(10, 10);
 
         builder.init(100, 150);
         builder.render_technology("Tech 1", 50, 20);
