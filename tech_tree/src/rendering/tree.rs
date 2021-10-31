@@ -23,6 +23,17 @@ impl TreeRenderer {
             let technology = tree.get(cell.id).unwrap();
 
             renderer.render_technology(technology.name().get_full(), cell.center_x, cell.center_y);
+
+            if !technology.successors().is_empty() {
+                let link_start = cell.get_link_start();
+
+                for successor in technology.successors() {
+                    let successor_cell = grid.get_cell(*successor).unwrap();
+                    let link_end = successor_cell.get_link_end();
+
+                    renderer.render_link(vec![link_start, link_end]);
+                }
+            }
         }
     }
 
@@ -114,7 +125,7 @@ mod tests {
             self.height = height;
         }
 
-        fn render_link(&mut self, _points: Vec<(i32, i32)>) {}
+        fn render_link(&mut self, points: Vec<(u32, u32)>) {}
 
         fn render_technology(&mut self, text: &str, x: u32, y: u32) {
             self.technologies.insert(text.to_string(), (x, y));

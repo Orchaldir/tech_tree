@@ -26,6 +26,7 @@ impl GridCell {
             half_height,
         }
     }
+
     pub fn simple(id: usize) -> Self {
         Self {
             id: TechnologyId::new(id),
@@ -34,6 +35,14 @@ impl GridCell {
             half_width: 0,
             half_height: 0,
         }
+    }
+
+    pub fn get_link_start(&self) -> (u32, u32) {
+        (self.center_x, self.center_y + self.half_height)
+    }
+
+    pub fn get_link_end(&self) -> (u32, u32) {
+        (self.center_x, self.center_y - self.half_height)
     }
 }
 
