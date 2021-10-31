@@ -12,8 +12,8 @@ fn main() {
         Input::test("Technology 4", vec!["Technology 2"]),
     ])
     .unwrap();
-    let mut builder = SvgBuilder::new(10, 10, 20);
-    let mut tree_renderer = TreeRenderer::default();
+    let mut builder = SvgBuilder::new(10, 10);
+    let mut tree_renderer = TreeRenderer::new(20);
 
     tree_renderer.render(&mut builder, &tree);
 

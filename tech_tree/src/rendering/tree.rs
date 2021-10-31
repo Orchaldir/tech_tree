@@ -1,12 +1,17 @@
 use crate::model::technology::tree::TechnologyTree;
-use crate::model::technology::TechnologyId;
+use crate::model::technology::{Technology, TechnologyId};
 use crate::rendering::renderer::Renderer;
 use crate::usecase::analysis::{calculate_depth, group_by_depth};
 
-#[derive(Default)]
-pub struct TreeRenderer;
+pub struct TreeRenderer {
+    padding: u32,
+}
 
 impl TreeRenderer {
+    pub fn new(padding: u32) -> Self {
+        Self { padding }
+    }
+
     pub fn render(&mut self, renderer: &mut dyn Renderer, tree: &TechnologyTree) {
         let depth = calculate_depth(tree);
         let groups = group_by_depth(&depth);
@@ -22,8 +27,7 @@ impl TreeRenderer {
 
             for id in column {
                 let technology = tree.get(id).unwrap();
-                let (t_width, t_height) =
-                    renderer.get_size_of_technology(technology.name().get_full());
+                let (t_width, t_height) = self.get_technology_size(renderer, technology);
 
                 renderer.render_technology(
                     technology.name().get_full(),
@@ -54,8 +58,7 @@ impl TreeRenderer {
 
             for id in column {
                 let technology = tree.get(*id).unwrap();
-                let (t_width, t_height) =
-                    renderer.get_size_of_technology(technology.name().get_full());
+                let (t_width, t_height) = self.get_technology_size(renderer, technology);
 
                 column_width += t_width;
                 max_height = max_height.max(t_height);
@@ -66,6 +69,16 @@ impl TreeRenderer {
         }
 
         (width, height)
+    }
+
+    fn get_technology_size(
+        &self,
+        renderer: &mut dyn Renderer,
+        technology: &Technology,
+    ) -> (u32, u32) {
+        let (width, height) = renderer.get_size_of_technology(technology.name().get_full());
+
+        (width + 2 * self.padding, height + 2 * self.padding)
     }
 }
 
@@ -105,18 +118,18 @@ mod tests {
     fn test_render() {
         let tree = init_tree();
         let mut renderer = MockRender::default();
-        let mut tree_renderer = TreeRenderer::default();
+        let mut tree_renderer = TreeRenderer::new(5);
 
         tree_renderer.render(&mut renderer, &tree);
 
-        assert_eq!(renderer.width, 50);
-        assert_eq!(renderer.height, 80);
+        assert_eq!(renderer.width, 70);
+        assert_eq!(renderer.height, 100);
         assert_eq!(
             renderer.technologies,
             HashMap::from([
-                ("a".to_string(), (5, 10)),
-                ("bb".to_string(), (10, 40)),
-                ("ccc".to_string(), (35, 50)),
+                ("a".to_string(), (10, 15)),
+                ("bb".to_string(), (15, 55)),
+                ("ccc".to_string(), (50, 65)),
             ])
         );
     }
