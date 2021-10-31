@@ -137,6 +137,24 @@ mod tests {
     }
 
     #[test]
+    fn test_get_predecessor_index() {
+        let technology = Technology::simple2(0, "Tech", vec![2, 3], vec![1]);
+
+        assert_predecessor_index(&technology, 0, None);
+        assert_predecessor_index(&technology, 1, None);
+        assert_predecessor_index(&technology, 2, Some(0));
+        assert_predecessor_index(&technology, 3, Some(1));
+        assert_predecessor_index(&technology, 4, None);
+    }
+
+    fn assert_predecessor_index(technology: &Technology, id: usize, result: Option<usize>) {
+        assert_eq!(
+            technology.get_predecessor_index(TechnologyId::new(id)),
+            result
+        );
+    }
+
+    #[test]
     fn test_input() {
         let input = Input::test("A", vec!["B", "C"]);
 
