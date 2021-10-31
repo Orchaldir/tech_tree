@@ -1,7 +1,9 @@
 use crate::model::technology::tree::TechnologyTree;
-use crate::model::technology::{Technology, TechnologyId};
+use crate::model::technology::TechnologyId;
+use crate::rendering::grid::{Grid, GridCell};
 use crate::rendering::renderer::Renderer;
 use crate::usecase::analysis::{calculate_depth, group_by_depth};
+use itertools::izip;
 
 pub struct TreeRenderer {
     padding: u32,
@@ -13,72 +15,82 @@ impl TreeRenderer {
     }
 
     pub fn render(&mut self, renderer: &mut dyn Renderer, tree: &TechnologyTree) {
-        let depth = calculate_depth(tree);
-        let groups = group_by_depth(&depth);
-        let (width, height) = self.get_size(renderer, &groups, tree);
+        let grid = self.calculate_grid(renderer, tree);
 
-        renderer.init(width, height);
+        renderer.init(grid.width(), grid.height());
 
-        let mut y = 0;
+        for cell in grid.cells() {
+            let technology = tree.get(cell.id).unwrap();
 
-        for column in groups {
-            let mut x = 0;
-            let mut max_height = 0;
-
-            for id in column {
-                let technology = tree.get(id).unwrap();
-                let (t_width, t_height) = self.get_technology_size(renderer, technology);
-
-                renderer.render_technology(
-                    technology.name().get_full(),
-                    x + t_width / 2,
-                    y + t_height / 2,
-                );
-
-                x += t_width;
-                max_height = max_height.max(t_height);
-            }
-
-            y += max_height;
+            renderer.render_technology(technology.name().get_full(), cell.center_x, cell.center_y);
         }
     }
 
-    fn get_size(
+    fn calculate_grid(&self, renderer: &mut dyn Renderer, tree: &TechnologyTree) -> Grid {
+        let depth = calculate_depth(tree);
+        let groups = group_by_depth(&depth);
+        let sizes = self.get_sizes(renderer, tree, &groups);
+        let mut cells = Vec::new();
+
+        let mut max_width = 0;
+        let mut y = 0;
+
+        for (column_id, column_size) in izip!(groups, sizes) {
+            let mut x = 0;
+            let mut column_height = 0;
+
+            for (id, (width, height)) in izip!(column_id, column_size) {
+                let padded_width = width + 2 * self.padding;
+                let padded_height = height + 2 * self.padding;
+
+                cells.push(GridCell::new(
+                    id,
+                    x + padded_width / 2,
+                    y + padded_height / 2,
+                    width / 2,
+                    height / 2,
+                ));
+
+                x += padded_width;
+                column_height = padded_height;
+            }
+
+            max_width = max_width.max(x);
+            y += column_height;
+        }
+
+        Grid::new(max_width, y, cells)
+    }
+
+    fn get_sizes(
         &self,
         renderer: &mut dyn Renderer,
-        groups: &[Vec<TechnologyId>],
         tree: &TechnologyTree,
-    ) -> (u32, u32) {
-        let mut width = 0;
-        let mut height = 0;
+        groups: &[Vec<TechnologyId>],
+    ) -> Vec<Vec<(u32, u32)>> {
+        let mut sizes = Vec::new();
 
         for column in groups {
-            let mut column_width = 0;
+            let mut widths = Vec::new();
             let mut max_height = 0;
 
             for id in column {
                 let technology = tree.get(*id).unwrap();
-                let (t_width, t_height) = self.get_technology_size(renderer, technology);
+                let (width, height) = renderer.get_size_of_technology(technology.name().get_full());
 
-                column_width += t_width;
-                max_height = max_height.max(t_height);
+                widths.push(width);
+                max_height = max_height.max(height);
             }
 
-            width = width.max(column_width);
-            height += max_height;
+            sizes.push(
+                widths
+                    .into_iter()
+                    .map(|width| (width, max_height))
+                    .collect(),
+            );
         }
 
-        (width, height)
-    }
-
-    fn get_technology_size(
-        &self,
-        renderer: &mut dyn Renderer,
-        technology: &Technology,
-    ) -> (u32, u32) {
-        let (width, height) = renderer.get_size_of_technology(technology.name().get_full());
-
-        (width + 2 * self.padding, height + 2 * self.padding)
+        sizes
     }
 }
 
