@@ -131,7 +131,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_builder() {
+    fn test_get_size_of_technology() {
+        let builder = SvgBuilder::new(10, 20, 30);
+
+        assert_eq!(builder.get_size_of_technology("test"), (120, 80));
+        assert_eq!(builder.get_size_of_technology("another"), (135, 80));
+    }
+
+    #[test]
+    fn test_export() {
         let mut builder = SvgBuilder::new(10, 10, 20);
 
         builder.init(100, 150);
