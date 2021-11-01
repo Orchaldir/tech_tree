@@ -1,0 +1,13 @@
+[package]
+name = "tech_tree_cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+structopt = "0.3"
+tech_tree = { path = "../tech_tree" }
+tech_tree_serde = { path = "../tech_tree_serde" }
+tech_tree_svg = { path = "../tech_tree_svg" }
