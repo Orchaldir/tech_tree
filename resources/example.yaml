@@ -1,0 +1,21 @@
+---
+technologies:
+  - name: Technology 0
+    predecessors: []
+  - name: Technology 1
+    predecessors: []
+  - name: Technology 2
+    predecessors:
+      - Technology 0
+      - Technology 1
+      - Technology 5
+  - name: Technology 3
+    predecessors:
+      - Technology 2
+  - name: Technology 4
+    predecessors:
+      - Technology 2
+      - Technology 1
+      - Technology 5
+  - name: Technology 5
+    predecessors: []

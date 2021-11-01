@@ -2,6 +2,7 @@
 
 members = [
     "tech_tree",
+    "tech_tree_cli",
     "tech_tree_serde",
     "tech_tree_svg",
 ]
