@@ -11,3 +11,8 @@ structopt = "0.3"
 tech_tree = { path = "../tech_tree" }
 tech_tree_serde = { path = "../tech_tree_serde" }
 tech_tree_svg = { path = "../tech_tree_svg" }
+
+[dev-dependencies]
+assert_cmd = "0.10"
+predicates = "1"
+tempfile = "3.2"
