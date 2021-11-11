@@ -1,18 +1,18 @@
 use crate::model::technology::tree::TechnologyTree;
 use crate::model::technology::TechnologyId;
 
-pub fn validate_no_cycles(tree: &TechnologyTree) -> bool {
+pub fn validate_no_cycles(tree: &TechnologyTree) -> Option<Vec<String>> {
     let len = tree.technologies().len();
     let mut visited = vec![false; len];
     let mut recursive = vec![false; len];
 
     for technology in tree.technologies() {
-        if validate(tree, *technology.id(), &mut visited, &mut recursive) {
-            return true;
+        if let Some(circle) = validate(tree, *technology.id(), &mut visited, &mut recursive) {
+            return Some(circle);
         }
     }
 
-    false
+    None
 }
 
 fn validate(
@@ -20,27 +20,49 @@ fn validate(
     id: TechnologyId,
     visited: &mut [bool],
     recursive: &mut [bool],
-) -> bool {
+) -> Option<Vec<String>> {
     let i = id.id();
 
     if recursive[i] {
-        return true;
+        return Some(get_circle(tree, id, recursive));
     } else if visited[i] {
-        return false;
+        return None;
     }
 
     recursive[i] = true;
     visited[i] = true;
 
     for successor_id in tree.get(id).unwrap().successors() {
-        if validate(tree, *successor_id, visited, recursive) {
-            return true;
+        if let Some(circle) = validate(tree, *successor_id, visited, recursive) {
+            return Some(circle);
         }
     }
 
     recursive[i] = false;
 
-    false
+    None
+}
+
+fn get_circle(tree: &TechnologyTree, id: TechnologyId, recursive: &mut [bool]) -> Vec<String> {
+    let mut circle = Vec::new();
+    let mut current_id = Some(id);
+
+    while let Some(id) = current_id {
+        recursive[id.id()] = false;
+        current_id = None;
+
+        let technology = tree.get(id).unwrap();
+        circle.push(technology.name().get_full().to_string());
+
+        for successor_id in technology.successors() {
+            if recursive[successor_id.id()] {
+                current_id = Some(*successor_id);
+                break;
+            }
+        }
+    }
+
+    circle
 }
 
 #[cfg(test)]
@@ -53,21 +75,24 @@ mod tests {
     fn test_empty() {
         let tree = TechnologyTree::new(vec![]);
 
-        assert!(!validate_no_cycles(&tree));
+        assert_eq!(validate_no_cycles(&tree), None);
     }
 
     #[test]
     fn test_no_cycle() {
         let tree = init_tree(vec![]);
 
-        assert!(!validate_no_cycles(&tree));
+        assert_eq!(validate_no_cycles(&tree), None);
     }
 
     #[test]
     fn test_cycle() {
-        let tree = init_tree(vec!["t4"]);
+        let tree = init_tree(vec!["t3"]);
 
-        assert!(validate_no_cycles(&tree));
+        assert_eq!(
+            validate_no_cycles(&tree),
+            Some(vec!["t0".to_string(), "t2".to_string(), "t3".to_string()])
+        );
     }
 
     fn init_tree(predecessors0: Vec<&str>) -> TechnologyTree {
