@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tech_tree::rendering::tree::TreeRenderer;
+use tech_tree::usecase::validation::no_cycles::validate_no_cycles;
 use tech_tree_serde::definition::technology::tree::TechnologyTreeDefinition;
 use tech_tree_serde::io::read;
 use tech_tree_svg::SvgBuilder;
@@ -21,7 +22,8 @@ fn main() -> Result<()> {
     println!("Import tech tree from {:?}", args.path);
 
     let definition: TechnologyTreeDefinition = read(&args.path)?;
-    let tree = definition.to_model()?;
+    let unvalidated = definition.to_model()?;
+    let tree = validate_no_cycles(unvalidated)?;
 
     println!(
         "Render tech tree with {} technologies",
