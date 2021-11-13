@@ -1,13 +1,24 @@
+use crate::model::error::AddError;
 use crate::model::technology::tree::TechnologyTree;
 use crate::model::technology::TechnologyId;
 
-pub fn validate_no_cycles(tree: &TechnologyTree) -> Option<Vec<String>> {
+pub fn validate_no_cycles(tree: TechnologyTree) -> Result<TechnologyTree, AddError> {
+    if let Some(circle) = validate_tree(&tree) {
+        return Err(AddError::Cycle(circle));
+    }
+
+    Ok(tree)
+}
+
+fn validate_tree(tree: &TechnologyTree) -> Option<Vec<String>> {
     let len = tree.technologies().len();
     let mut visited = vec![false; len];
     let mut recursive = vec![false; len];
 
     for technology in tree.technologies() {
-        if let Some(circle) = validate(tree, *technology.id(), &mut visited, &mut recursive) {
+        if let Some(circle) =
+            validate_technology(tree, *technology.id(), &mut visited, &mut recursive)
+        {
             return Some(circle);
         }
     }
@@ -15,7 +26,7 @@ pub fn validate_no_cycles(tree: &TechnologyTree) -> Option<Vec<String>> {
     None
 }
 
-fn validate(
+fn validate_technology(
     tree: &TechnologyTree,
     id: TechnologyId,
     visited: &mut [bool],
@@ -33,7 +44,7 @@ fn validate(
     visited[i] = true;
 
     for successor_id in tree.get(id).unwrap().successors() {
-        if let Some(circle) = validate(tree, *successor_id, visited, recursive) {
+        if let Some(circle) = validate_technology(tree, *successor_id, visited, recursive) {
             return Some(circle);
         }
     }
@@ -75,23 +86,27 @@ mod tests {
     fn test_empty() {
         let tree = TechnologyTree::new(vec![]);
 
-        assert_eq!(validate_no_cycles(&tree), None);
+        assert_eq!(validate_tree(&tree), None);
     }
 
     #[test]
     fn test_no_cycle() {
         let tree = init_tree(vec![]);
 
-        assert_eq!(validate_no_cycles(&tree), None);
+        assert_eq!(validate_tree(&tree), None);
     }
 
     #[test]
-    fn test_cycle() {
+    fn test_error() {
         let tree = init_tree(vec!["t3"]);
 
         assert_eq!(
-            validate_no_cycles(&tree),
-            Some(vec!["t0".to_string(), "t2".to_string(), "t3".to_string()])
+            validate_no_cycles(tree),
+            Err(AddError::Cycle(vec![
+                "t0".to_string(),
+                "t2".to_string(),
+                "t3".to_string()
+            ]))
         );
     }
 
